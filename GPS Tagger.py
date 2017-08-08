@@ -184,9 +184,6 @@ def wrangle_data(inputs):
                 for k,v in inputs.items():
                     writer.writerow([k, v])
 
-        
-        
-
 get_input()
 
 
