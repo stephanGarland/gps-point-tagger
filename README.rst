@@ -1,6 +1,4 @@
-# GPS Tagger
-
-Frustrated by the lack of commercial or FOSS offerings, I made a simple tool with Python. 
+Frustrated by the lack of commercial or FOSS offerings, I made a simple tool with Python. This lets you get GPS coordinates from any NMEA-compatible device, and place them, along with whatever other attributes you'd like (currently set up for utility poles, transformers, and electric meters, but it would be trivial to change the dictionaries) into a CSV.
 
 
 Dependencies:
