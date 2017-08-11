@@ -5,6 +5,7 @@ Dependencies:
 *************
 
 * `Pynmea2 <https://pypi.python.org/pypi/pynmea2>`_
+* `Pyserial <https://pypi.python.org/pypi/pyserial>`_
 
 
 How to use GPS Tagger:
