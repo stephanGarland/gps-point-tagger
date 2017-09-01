@@ -6,6 +6,7 @@ Dependencies:
 
 * `Pynmea2 <https://pypi.python.org/pypi/pynmea2>`_
 * `Pyserial <https://pypi.python.org/pypi/pyserial>`_
+* `Simplekml (for Secondary Tagger) <https://pypi.python.org/pypi/simplekml>`_
 
 
 How to use GPS Tagger:
@@ -16,11 +17,20 @@ How to use GPS Tagger:
 4. If you have more entries, press Clear to reset all text boxes, and insert a blank row in the CSV.
 5. When done, press Quit.
 
+How to use Secondary GPS Tagger:
+************************
+1. Input a pole number/name into the Primary Pole # field.
+2. Press Get Lat/Long to get coordinates for the primary pole.
+3. Internal counter auto-increments; press Get Lat/Long at each secondary pole you wish to add.
+4. Use Next/Prev to manually skip fields.
+5. Press Save to generate a KML, saved in the script's location.
+6. Press Clear All to wipe all fields, and reset the counter.
 
 Changelog:
 **********
 
 * v1.0 - Initial release.
+* v1.1 - 
 
 
 TODO:
