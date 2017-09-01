@@ -39,15 +39,15 @@ ser = serial.Serial()
 ser.baudrate = 9600
 ser.timeout = 1
 
-fields = 'gs_rated_input_voltage', 'gs_rated_output_voltage', 'gs_substype_cd',\
-          'gs_rated_kva', 'gs_phase', 'gs_serial_number', 'gs_secondary_feeds',\
-          'gs_amr_identification', 'long', 'lat', 'gs_equipment_location', 'gs_height', 'gs_class'
+fields = 'gs_equipment_location', 'gs_serial_number', 'gs_rated_input_voltage', \
+         'gs_rated_output_voltage', 'gs_substype_cd', 'gs_rated_kva', 'gs_phase', 'gs_secondary_feeds',\
+         'gs_amr_identification', 'long', 'lat', 'gs_height', 'gs_class'
           
-labels = { 'gs_rated_input_voltage':'Vpri', 'gs_rated_output_voltage':'Vsec',\
-           'gs_phase':'Phase', 'gs_rated_kva':'kVA', 'gs_substype_cd':'Overhead/Padmount',\
-           'gs_serial_number':'Serial #', 'gs_secondary_feeds':'Secondary Feeds (Meter #s)',\
+labels = { 'gs_equipment_location':'Pole #', 'gs_serial_number':'Serial #', 'gs_rated_input_voltage':'Vpri',\
+           'gs_rated_output_voltage':'Vsec', 'gs_substype_cd':'Overhead/Padmount', 'gs_rated_kva':'kVA',\
+           'gs_phase':'Phase', 'gs_secondary_feeds':'Secondary Feeds (Meter #s)',\
            'gs_amr_identification':'Meter #','long':'Longitude', 'lat':'Latitude',\
-           'gs_equipment_location':'Pole #','gs_height':'Pole Height', 'gs_class':'Pole Class' }
+           'gs_height':'Pole Height', 'gs_class':'Pole Class' }
 
 # Iterate over all available ports and find the GPS          
 ser_ports = list(test_ser.comports())
@@ -104,7 +104,8 @@ def makeform(root, fields):
         lab.pack(side=tk.LEFT)
         ent.pack(side=tk.RIGHT, expand=tk.YES, fill=tk.X)
         entries.append((field, ent))
-    # for the love of god fix this    
+    # Yeah, it's a global - it works
+    # If you'd like to split the returned tuple instead, be my guest
     global output_check_var
     output_check_var = check_var
     return entries
@@ -194,18 +195,6 @@ def quit_prog():
     except FileNotFoundError:
         pass
     raise SystemExit
-    
-
-
-    
-def easter_egg():
-    quotes = 'Thank you Mario! But our princess is in another castle!',\
-             'You are in a maze of twisty passages, all alike.',\
-             'You have died of dysentery.', 'Wololo.',\
-             'Fuel tanks are filled!',\
-             'Cake, and grief counseling, will be available at the conclusion of the test.'
-    tkMsg.showinfo("Look at what you found!", random.choice(quotes))
-    
     
 
 
@@ -350,6 +339,3 @@ def secondary_capture():
     
 
 get_input()
-
-
-        
