@@ -18,7 +18,7 @@ import serial
 import serial.tools.list_ports as test_ser
 import pynmea2 as gps
 import subprocess
-from sys import version_info
+import sys
 import webbrowser
 
 try:
@@ -30,7 +30,7 @@ except ImportError:  # Python 2.x
     import Tkinter as tk
     import tkMessageBox as tkMsg
     from tkFileDialog import asksaveasfilename
-    
+    # Python 2.x has reload as a built-in
     
 root = tk.Tk()
 root.withdraw()
@@ -43,10 +43,10 @@ fields = 'gs_equipment_location', 'gs_serial_number', 'gs_rated_input_voltage', 
          'gs_rated_output_voltage', 'gs_substype_cd', 'gs_rated_kva', 'gs_phase', 'gs_secondary_feeds',\
          'gs_amr_identification', 'long', 'lat', 'gs_height', 'gs_class'
           
-labels = { 'gs_equipment_location':'Pole #', 'gs_serial_number':'Serial #', 'gs_rated_input_voltage':'Vpri',\
+labels = { 'gs_equipment_location':'Pole #', 'gs_serial_number':'Transformer Serial #', 'gs_rated_input_voltage':'Vpri',\
            'gs_rated_output_voltage':'Vsec', 'gs_substype_cd':'Overhead/Padmount', 'gs_rated_kva':'kVA',\
            'gs_phase':'Phase', 'gs_secondary_feeds':'Secondary Feeds (Meter #s)',\
-           'gs_amr_identification':'Meter #','long':'Longitude', 'lat':'Latitude',\
+           'gs_amr_identification':'Pole Meter #','long':'Longitude', 'lat':'Latitude',\
            'gs_height':'Pole Height', 'gs_class':'Pole Class' }
 
 # Iterate over all available ports and find the GPS          
@@ -241,7 +241,7 @@ def clear_entries(entries):
             text = entry[1]
             text.delete(0, tk.END)
             
-    if version_info.major == 2:
+    if sys.version_info.major == 2:
         with open(csv_file_name, 'ab') as f:
             writer = csv.writer(f)
             # Inserts blank row between successive entries
@@ -304,7 +304,7 @@ def show_gps(entries):
 
 def wrangle_data(inputs):
     # Python 2 skips inserting blank rows if it's opened as a binary file
-    if version_info.major == 2:
+    if sys.version_info.major == 2:
         with open(csv_file_name, 'ab') as f:
             writer = csv.writer(f)
             if f.tell() == 0:
@@ -330,12 +330,17 @@ def wrangle_data(inputs):
 
                     
 def secondary_capture():
-    '''try:
-        GPS_Secondary_Tagger = reload(GPS_Secondary_Tagger)
-    except Exception:
-        GPS_Secondary_Tagger = __import__('GPS Secondary Tagger')'''
-    subprocess.Popen('GPS Secondary Tagger.exe')    
+    try:
+        if 'python' in os.path.split(sys.executable)[1]:
+            try:
+                # Currently non-functional
+                GPS_Secondary_Tagger = reload(GPS_Secondary_Tagger)
+            except Exception:
+                GPS_Secondary_Tagger = __import__('GPS Secondary Tagger')
+        else:
+            subprocess.Popen('GPS Secondary Tagger.exe')    
+    except FileNotFoundError:
+        tkMsg.showerror("File Not Found", "Secondary tagger not found")
     
     
-
 get_input()
