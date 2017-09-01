@@ -30,12 +30,9 @@ Changelog:
 **********
 
 * v1.0 - Initial release.
-* v1.1 - 
+* v1.1 - Re-arranged items to capture to be a more logical flow.
+* v1.2 - Created Secondary program that maps poles with simplekml.
+* v1.3 - Integrated launching of Secondary program into Primary
 
-
-TODO:
-*******************
-
-* Add KML output, also perhaps a ring of your track. $GPRMC message contains speed, which would be useful.
 
 
