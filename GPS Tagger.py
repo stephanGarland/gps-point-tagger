@@ -17,6 +17,7 @@ import os
 import serial
 import serial.tools.list_ports as test_ser
 import pynmea2 as gps
+import string
 import subprocess
 import sys
 import webbrowser
@@ -31,7 +32,7 @@ except ImportError:  # Python 2.x
     import tkMessageBox as tkMsg
     from tkFileDialog import asksaveasfilename
     # Python 2.x has reload as a built-in
-    
+
 root = tk.Tk()
 root.withdraw()
 
@@ -39,55 +40,52 @@ ser = serial.Serial()
 ser.baudrate = 9600
 ser.timeout = 1
 
+# Used for various error checking
+pole_num_typo_deliberate = None
+line_ground_typo_deliberate = None
+
 fields = 'gs_equipment_location', 'gs_serial_number', 'gs_rated_input_voltage', \
          'gs_rated_output_voltage', 'gs_substype_cd', 'gs_rated_kva', 'gs_phase', 'gs_secondary_feeds',\
          'gs_amr_identification', 'long', 'lat', 'gs_height', 'gs_class'
-          
+
 labels = { 'gs_equipment_location':'Pole #', 'gs_serial_number':'Transformer Serial #', 'gs_rated_input_voltage':'Vpri',\
            'gs_rated_output_voltage':'Vsec', 'gs_substype_cd':'Overhead/Padmount', 'gs_rated_kva':'kVA',\
            'gs_phase':'Phase', 'gs_secondary_feeds':'Secondary Feeds (Meter #s)',\
            'gs_amr_identification':'Pole Meter #','long':'Longitude', 'lat':'Latitude',\
            'gs_height':'Pole Height', 'gs_class':'Pole Class' }
 
-# Iterate over all available ports and find the GPS          
+# Iterate over all available ports and find the GPS
 ser_ports = list(test_ser.comports())
 
 for p in ser_ports:
     if 'NMEA' in p.description:
         ser.port = p.device
-        # Used for debugging
-        # print("GPS found at {0}\n{1}".format(p.device, p.description))  
 if not ser.port:
     no_gps_question = tkMsg.askyesno("Error", "No GPS Device found - do you wish to continue?")
-    if no_gps_question == True:
+    if no_gps_question:
         pass
-    elif no_gps_question == False:
+    else:
         # ser.open() hasn't been called yet, nothing to flush
         raise SystemExit
 
 
-    
-def save_file():
+def get_save_loc():
     tkMsg.showinfo("CSV Selection", "Select your CSV filename and save location")
     csv_file_name = asksaveasfilename(title="CSV Save Location",\
                     defaultextension=".csv", filetypes=(("CSV", "*.csv"),\
                     ("All Files", "*.*")), initialfile=str(date.today()))
     return csv_file_name
-                
 
 
-csv_file_name = save_file()
-        
+csv_file_name = get_save_loc()
 if not csv_file_name:
     no_save_question = tkMsg.askyesno("Error", "You have not selected a savefile - do you wish to select one now?")
-    if no_save_question == True:
-        save_file()
-    elif no_save_question == False:
-        pass                
+    if no_save_question:
+        get_save_loc()
+    else:
+        pass
 # Open the serial port for the GPS
 #ser.open()
-
-
 
 # Fills root window with labels and text boxes
 def makeform(root, fields):
@@ -111,7 +109,6 @@ def makeform(root, fields):
     return entries
 
 
-
 def get_input():
     root.deiconify()
     root.title("GPS Tagger")
@@ -121,9 +118,9 @@ def get_input():
     if ser.port:
         b1 = tk.Button(root, text="Get Long/Lat", command=(lambda e=ents: show_gps(e)))
         b1.pack(side=tk.LEFT, padx=5, pady=5)
-    b2 = tk.Button(root, text="Save", command=(lambda e=ents: fetch(e)))
-    b2.pack(side=tk.LEFT, padx=5, pady=5)
-    b3 = tk.Button(root, text="Clear/Next Entry", command=(lambda e=ents: clear_entries(e)))
+    #b2 = tk.Button(root, text="Save", command=(lambda e=ents: fetch(e)))
+    #b2.pack(side=tk.LEFT, padx=5, pady=5)
+    b3 = tk.Button(root, text="Save/Next Entry", command=(lambda e=ents: fetch(e)))
     b3.pack(side=tk.LEFT, padx=5, pady=5)
     b4 = tk.Button(root, text="Secondary Capture", command=secondary_capture)
     b4.pack(side=tk.LEFT, padx=5, pady=5)
@@ -133,52 +130,78 @@ def get_input():
     b6.pack(side=tk.LEFT, padx=5, pady=5)
     root.mainloop()
 
-    
 
 # This is a HTML file encoded into base64, so I can launch a HTML webpage for help
 # The temporary file is stored temporarily in the path where the program is executed,
 # and removed once the program is exited
-# You are welcome to visit https://www.base64decode.org and copy/paste this block in 
+# You are welcome to visit https://www.base64decode.org and copy/paste this block in
 # if you are (rightfully) suspicious of obfuscated code
 def help():
-    b64html = b'PCFET0NUWVBFIGh0bWw+DQo8aHRtbCBsYW5nID0gImVuIj4NCjxoZWFkPg0KICA8dGl0bGU+R1BTIFRhZ2dlciBIZWxwPC90aXRsZT4NCjwvaG\
-             VhZD4NCjxib2R5Pg0KICA8aDE+R1BTIFRhZ2dlciBIZWxwPC9oMT4NCiAgPGg0PlJlcXVpcmVtZW50czo8L2g0Pg0KICA8dWw+DQogIDxsaT5H\
-             UFMgZGV2aWNlIGNhcGFibGUgb2Ygb3V0cHV0dGluZyBOTUVBIG1lc3NhZ2VzIC0gdGhlIHByb2dyYW0gd2lsbCBhbGVydCB5b3UgaWYgbm8gc3\
-             VpdGFibGUgZGV2aWNlIGlzIGZvdW5kLCBhbmQgYWxzbyBjb25maWd1cmVzIGl0cyBvd24gcG9ydCBzZWxlY3Rpb24uPC9saT4NCiAgPC91bD4N\
-             CiAgPHA+VG8gdXNlIHRoZSBhcHAsIGVudGVyIGFzIG11Y2ggb3IgYXMgbGl0dGxlIGRhdGEgYXMgeW91IHdvdWxkIGxpa2UuIEFsbCBmaWVsZH\
-             Mgd2l0aCBkYXRhIGluIHRoZW0gd2lsbCBiZSBzYXZlZCB1cG9uIHVzZXIgcmVxdWVzdCBpbiBhIENTViwgd2l0aCBlbnRyaWVzIHNlcGFyYXRl\
-             ZCBieSBhIGJsYW5rIGxpbmUuPC9wPg0KICA8cD5UbyBnZXQgR1BTIGNvb3JkaW5hdGVzLCB1c2UgdGhlIEdldCBMYXRcTG9uZyBidXR0b24gLS\
-             B0aGVyZSBtYXkgYmUgYSBkZWxheSwgYXMgdGhlIHByb2dyYW0gbG9vcHMgcmVhZGluZyB0aGUgbWVzc2FnZXMgdW50aWwgYSB2YWxpZCAoaS5l\
-             LiBub3QgMC4wLDAuMCBMYXQvTG9uZykgaXMgcmVjZWl2ZWQuPC9wPg0KICA8cD5XaGVuIHlvdSBoYXZlIGNvbXBsZXRlZCBlbnRlcmluZyBkYX\
-             RhIGZvciB0aGUgcG9sZS90cmFuc2Zvcm1lciwgc2VsZWN0IFNhdmUsIHRoZW4gQ2xlYXJcTmV4dCBFbnRyeS4gVGhpcyB3aWxsIHdyaXRlIHRo\
-             ZSBkYXRhIHRvIHRoZSBDU1YgZmlsZSB5b3Ugc2VsZWN0ZWQgdXBvbiBsYXVuY2hpbmcgdGhlIHByb2dyYW0uPC9wPg0KICA8cD5Ob3RlIHRoYX\
-             QgKGlmIGRhdGEgaXMgZW50ZXJlZCkgdGhlIFZwcmksIFZzZWMsIGFuZCBPdmVyaGVhZC9QYWRtb3VudCBmaWVsZHMgYXJlIHBlcnNpc3RlbnQ7\
-             IHRoaXMgaXMgYmVjYXVzZSB0aG9zZSB2YWx1ZXMgcmFyZWx5IGNoYW5nZSBmcm9tIG9uZSB0byB0aGUgbmV4dCwgYW5kIGl0IHNhdmVzIG9uIH\
-             JlcGV0aXRpdmUgZGF0YSBlbnRyeS4gSWYgeW91IG5lZWQgdG8gY2hhbmdlIHRoZW0sIHNpbXBseSBtYW51YWxseSBvdmVyd3JpdGUgdGhlIGZp\
-             ZWxkcy48L3A+DQogIDxwPlRoZSAiKz0xIiBjaGVja2JveCBuZXh0IHRvIHRoZSBQb2xlIE51bWJlciBmaWVsZCBpcyB1c2VmdWwgd2hlbiByZW\
-             NvcmRpbmcgZGF0YSBpbiBvcmRlcjsgaWYgc2VsZWN0ZWQsIHVwb24gaGl0dGluZyBDbGVhci9OZXh0IEVudHJ5LCB0aGUgUG9sZSBOdW1iZXIg\
-             d2lsbCBpbmNyZW1lbnQgYnkgb25lLiBFeGFtcGxlczo8L3A+DQogIDx1bD4NCiAgPGxpPkJSVzQgLSZndDsgQlJXNS48L2xpPg0KICA8bGk+Ql\
-             JXNC1OOSAtJmd0OyBCUlc0LU4xMC48L2xpPg0KICA8L3VsPg0KICA8cD5Pbmx5IHRoZSBsYXN0IGVsZW1lbnQgb2YgdGhlIHN0cmluZyBpcyBp\
-             bmNyZW1lbnRlZDsgYWxzbyBub3RlIHRoYXQgdGhlIHByb2dyYW0gZG9lcyBub3QgaGFuZGxlIGluaXRpYXRpbmcgdGFrZW9mZnMuIElmIHlvdS\
-             BuZWVkLCBmb3IgZXhhbXBsZSwgQlJXNC1OOSB0byBiZWNvbWUgQlJXNC1OOS1OMSwgeW91IHdpbGwgaGF2ZSB0byBtYW51YWxseSB0eXBlIHRo\
-             YXQgaW4uIEZvbGxvd2luZyBpdGVtcyB3b3VsZCBiZWNvbWUgQlJXNC1OOS1OMiwgZXRjLjwvcD4NCiAgPGg0Pktub3duIElzc3Vlcy9Xb3JrYX\
-             JvdW5kczo8L2g0Pg0KICA8cD5PY2Nhc2lvbmFsbHksIHdoZW4gcmV0cmlldmluZyBHUFMgY29vcmRpbmF0ZXMsIHRoZSBDT00gcG9ydCB3aWxs\
-             IGJlY29tZSBsb2NrZWQsIGFuZCB0aGUgcHJvZ3JhbSB3aWxsIGZyZWV6ZSwgbmVjZXNzaXRhdGluZyB0aGUgY29tcHV0ZXIgdG8gYmUgcmVib2\
-             90ZWQuIEkgaGF2ZSBtb2RpZmllZCB0aGUgcHJvZ3JhbSB0byBvcGVuIGFuZCBjbG9zZSB0aGUgQ09NIHBvcnQgYmV0d2VlbiBlYWNoIHNldCBv\
-             ZiBjb29yZGluYXRlcywgd2hpY2ggSSBiZWxpZXZlIGhhcyBmaXhlZCB0aGUgaXNzdWUsIGJ1dCBpZiBpdCBvY2N1cnMsIHJlYm9vdC4gQWRkaX\
-             Rpb25hbGx5LCBhcyBhIG1lYW5zIG9mIG1pdGlnYXRpb24sIGl0IGlzIHJlY29tbWVuZGVkIHRvIGdldCBHUFMgY29vcmRpbmF0ZXMgZmlyc3Qg\
-             YmVmb3JlIGlucHV0dGluZyBhbnkgb3RoZXIgZGF0YTsgdGhpcyB3YXksIHlvdSB3aWxsIG5vdCBoYXZlIGxvc3QgYW55dGhpbmcgdHlwZWQgaW\
-             4sIGFzIHRoZSBDU1YgZmlsZSBpcyBvcGVuZWQsIHVwZGF0ZWQsIGFuZCBjbG9zZWQgd2l0aCBlYWNoIFNhdmUuPC9wPg0KICA8aDQ+TGljZW5z\
-             ZTwvaDQ+DQogIDxwPkdQUyBUYWdnZXI8YnIgLz4gQ29weXJpZ2h0IChDKSAyMDE3IFN0ZXBoYW4gR2FybGFuZDxiciAvPnN0ZXBoYW4ubWFyYy\
-             5nYXJsYW5kQGdtYWlsLmNvbTwvcD4NCiAgPHA+VGhpcyBwcm9ncmFtIGlzIGZyZWUgc29mdHdhcmU6IHlvdSBjYW4gcmVkaXN0cmlidXRlIGl0\
-             IGFuZC9vciBtb2RpZnk8YnIgLz4gaXQgdW5kZXIgdGhlIHRlcm1zIG9mIHRoZSBHTlUgR2VuZXJhbCBQdWJsaWMgTGljZW5zZSBhcyBwdWJsaX\
-             NoZWQgYnk8YnIgLz4gdGhlIEZyZWUgU29mdHdhcmUgRm91bmRhdGlvbiwgZWl0aGVyIHZlcnNpb24gMyBvZiB0aGUgTGljZW5zZSwgb3I8YnIg\
-             Lz4gKGF0IHlvdXIgb3B0aW9uKSBhbnkgbGF0ZXIgdmVyc2lvbi48L3A+DQogIDxwPlRoaXMgcHJvZ3JhbSBpcyBkaXN0cmlidXRlZCBpbiB0aG\
-             UgaG9wZSB0aGF0IGl0IHdpbGwgYmUgdXNlZnVsLDxiciAvPiBidXQgV0lUSE9VVCBBTlkgV0FSUkFOVFk7IHdpdGhvdXQgZXZlbiB0aGUgaW1w\
-             bGllZCB3YXJyYW50eSBvZjxiciAvPiBNRVJDSEFOVEFCSUxJVFkgb3IgRklUTkVTUyBGT1IgQSBQQVJUSUNVTEFSIFBVUlBPU0UuIFNlZSB0aG\
-             U8YnIgLz4gR05VIEdlbmVyYWwgUHVibGljIExpY2Vuc2UgZm9yIG1vcmUgZGV0YWlscy48L3A+DQogIDxwPllvdSBzaG91bGQgaGF2ZSByZWNl\
-             aXZlZCBhIGNvcHkgb2YgdGhlIEdOVSBHZW5lcmFsIFB1YmxpYyBMaWNlbnNlPGJyIC8+IGFsb25nIHdpdGggdGhpcyBwcm9ncmFtLiBJZiBub3\
-             QsIHNlZSAmbHQ7aHR0cDovL3d3dy5nbnUub3JnL2xpY2Vuc2VzLyZndDsuPC9wPg0KPC9ib2R5Pg0KPC9odG1sPg0K'
+    b64html = b'PHA+Jm5ic3A7PC9wPg0KPGgxPkdQUyBUYWdnZXIgSGVscDwvaDE+DQo8aDQ+UmVxdWlyZW1lbnRz\
+                OjwvaDQ+DQo8dWw+DQo8bGk+R1BTIGRldmljZSBjYXBhYmxlIG9mIG91dHB1dHRpbmcgTk1FQSBt\
+                ZXNzYWdlcyAtIHRoZSBwcm9ncmFtIHdpbGwgYWxlcnQgeW91IGlmIG5vIHN1aXRhYmxlIGRldmlj\
+                ZSBpcyBmb3VuZCwgYW5kIGFsc28gY29uZmlndXJlcyBpdHMgb3duIHBvcnQgc2VsZWN0aW9uLiBO\
+                b3QgdGVzdGVkIHdpdGggVVNCIEdQUyBkZXZpY2VzLCBidXQgYW55dGhpbmcgdGhhdCB1dGlsaXpl\
+                cyBhIENPTSBwb3J0ICh2aXJ0dWFsIG9yIG90aGVyd2lzZSkgc2hvdWxkIHdvcmsuIFdpbmRvd3Mg\
+                MTAgbWF5IHVzZSBXaW5kb3dzIExvY2F0aW9uIFNlcnZpY2VzIGluc3RlYWQgb2YgYSBDT00gcG9y\
+                dCwgd2hpY2ggd2lsbCBub3Qgd29yay48L2xpPg0KPC91bD4NCjxwPlRvIHVzZSB0aGUgYXBwLCBl\
+                bnRlciBhcyBtdWNoIG9yIGFzIGxpdHRsZSBkYXRhIGFzIHlvdSB3b3VsZCBsaWtlLiBBbGwgZmll\
+                bGRzIHdpdGggZGF0YSBpbiB0aGVtIHdpbGwgYmUgc2F2ZWQgdXBvbiB1c2VyIHJlcXVlc3QgaW4g\
+                YSBDU1YsIHdpdGggZW50cmllcyBzZXBhcmF0ZWQgYnkgYSBibGFuayBsaW5lLjwvcD4NCjxwPk1l\
+                dGVyICNzIHNob3VsZCBiZSBpbnNlcnRlZCB3aXRoIGNvbW1hcyBhcyBkZWxpbWl0ZXJzLCBpLmUu\
+                IDEyMzQ1Njc4LCA4NzY1NDMyMS4uLjwvcD4NCjxwPlRoZXJlIGlzIHNvbWUgcnVkaW1lbnRhcnkg\
+                ZXJyb3ItY2hlY2tpbmcuIElmIHlvdSB0cnkgdG8gaW5zZXJ0IGFueXRoaW5nIGJ1dCBudW1iZXJz\
+                IGludG8gdm9sdGFnZSBvciBrVkEgZmllbGRzLCBpdCdsbCB0aHJvdyBhbiBlcnJvcjsgaWYgeW91\
+                IG1peCBwaGFzZS1waGFzZSBhbmQgcGhhc2UtZ3JvdW5kIHZvbHRhZ2VzIGZvciBWcHJpL1ZzZWMs\
+                IHlvdSdsbCBiZSB3YXJuZWQsIGJ1dCBhbGxvd2VkIHRvIGNvbnRpbnVlIGlmIGRlc2lyZWQuIFNp\
+                bWlsYXJseSwgaWYgeW91IHVzZSBhIG5vbi1hbHBoYW51bWVyaWMgY2hhcmFjdGVyIGluIHRoZSBQ\
+                b2xlICMgZmllbGQsIHlvdSdsbCBiZSB3YXJuZWQsIGJ1dCBpdCBjYW4gcmVtYWluIGlmIGRlc2ly\
+                ZWQuIE5vdGUgdGhhdCBhdXRvLWluY3JlbWVudGluZyBpcyBkaXNhYmxlZCBmb3Igc3VjaCBjYXNl\
+                cy48L3A+DQo8cD5UbyBnZXQgR1BTIGNvb3JkaW5hdGVzLCB1c2UgdGhlIEdldCBMYXRcTG9uZyBi\
+                dXR0b24gLSB0aGVyZSBtYXkgYmUgYSBkZWxheSwgYXMgdGhlIHByb2dyYW0gbG9vcHMgcmVhZGlu\
+                ZyB0aGUgbWVzc2FnZXMgdW50aWwgYSB2YWxpZCAoaS5lLiBub3QgMC4wLDAuMCBMYXQvTG9uZykg\
+                aXMgcmVjZWl2ZWQuPC9wPg0KPHA+V2hlbiB5b3UgaGF2ZSBjb21wbGV0ZWQgZW50ZXJpbmcgZGF0\
+                YSBmb3IgdGhlIHBvbGUvdHJhbnNmb3JtZXIsIHNlbGVjdCBTYXZlLCB0aGVuIENsZWFyXE5leHQg\
+                RW50cnkuIFRoaXMgd2lsbCB3cml0ZSB0aGUgZGF0YSB0byB0aGUgQ1NWIGZpbGUgeW91IHNlbGVj\
+                dGVkIHVwb24gbGF1bmNoaW5nIHRoZSBwcm9ncmFtLjwvcD4NCjxwPk5vdGUgdGhhdCAoaWYgZGF0\
+                YSBpcyBlbnRlcmVkKSB0aGUgVnByaSwgVnNlYywgYW5kIE92ZXJoZWFkL1BhZG1vdW50IGZpZWxk\
+                cyBhcmUgcGVyc2lzdGVudDsgdGhpcyBpcyBiZWNhdXNlIHRob3NlIHZhbHVlcyByYXJlbHkgY2hh\
+                bmdlIGZyb20gb25lIHRvIHRoZSBuZXh0LCBhbmQgaXQgc2F2ZXMgb24gcmVwZXRpdGl2ZSBkYXRh\
+                IGVudHJ5LiBJZiB5b3UgbmVlZCB0byBjaGFuZ2UgdGhlbSwgc2ltcGx5IG1hbnVhbGx5IG92ZXJ3\
+                cml0ZSB0aGUgZmllbGRzLjwvcD4NCjxwPlRoZSAiKz0xIiBjaGVja2JveCBuZXh0IHRvIHRoZSBQ\
+                b2xlIE51bWJlciBmaWVsZCBpcyB1c2VmdWwgd2hlbiByZWNvcmRpbmcgZGF0YSBpbiBvcmRlcjsg\
+                aWYgc2VsZWN0ZWQsIHVwb24gaGl0dGluZyBTYXZlL05leHQgRW50cnksIHRoZSBQb2xlIE51bWJl\
+                ciB3aWxsIGluY3JlbWVudCBieSBvbmUuIEV4YW1wbGVzOjwvcD4NCjx1bD4NCjxsaT5CUlc0IC0m\
+                Z3Q7IEJSVzUuPC9saT4NCjxsaT5CUlc0LU45IC0mZ3Q7IEJSVzQtTjEwLjwvbGk+DQo8L3VsPg0K\
+                PHA+T25seSB0aGUgbGFzdCBlbGVtZW50IG9mIHRoZSBzdHJpbmcgaXMgaW5jcmVtZW50ZWQ7IGFs\
+                c28gbm90ZSB0aGF0IHRoZSBwcm9ncmFtIGRvZXMgbm90IGhhbmRsZSBpbml0aWF0aW5nIHRha2Vv\
+                ZmZzLiBJZiB5b3UgbmVlZCwgZm9yIGV4YW1wbGUsIEJSVzQtTjkgdG8gYmVjb21lIEJSVzQtTjkt\
+                TjEsIHlvdSB3aWxsIGhhdmUgdG8gbWFudWFsbHkgdHlwZSB0aGF0IGluLiBGb2xsb3dpbmcgaXRl\
+                bXMgd291bGQgYmVjb21lIEJSVzQtTjktTjIsIGV0Yy48L3A+DQo8aDQ+S25vd24gSXNzdWVzL1dv\
+                cmthcm91bmRzOjwvaDQ+DQo8cD5PY2Nhc2lvbmFsbHksIHdoZW4gcmV0cmlldmluZyBHUFMgY29v\
+                cmRpbmF0ZXMsIHRoZSBDT00gcG9ydCB3aWxsIGJlY29tZSBsb2NrZWQsIGFuZCB0aGUgcHJvZ3Jh\
+                bSB3aWxsIGZyZWV6ZSwgbmVjZXNzaXRhdGluZyB0aGUgY29tcHV0ZXIgdG8gYmUgcmVib290ZWQu\
+                IEkgaGF2ZSBtb2RpZmllZCB0aGUgcHJvZ3JhbSB0byBvcGVuIGFuZCBjbG9zZSB0aGUgQ09NIHBv\
+                cnQgYmV0d2VlbiBlYWNoIHNldCBvZiBjb29yZGluYXRlcywgd2hpY2ggSSBiZWxpZXZlIGhhcyBm\
+                aXhlZCB0aGUgaXNzdWUsIGJ1dCBpZiBpdCBvY2N1cnMsIHJlYm9vdC4gQWRkaXRpb25hbGx5LCBh\
+                cyBhIG1lYW5zIG9mIG1pdGlnYXRpb24sIGl0IGlzIHJlY29tbWVuZGVkIHRvIGdldCBHUFMgY29v\
+                cmRpbmF0ZXMgZmlyc3QgYmVmb3JlIGlucHV0dGluZyBhbnkgb3RoZXIgZGF0YTsgdGhpcyB3YXks\
+                IHlvdSB3aWxsIG5vdCBoYXZlIGxvc3QgYW55dGhpbmcgdHlwZWQgaW4sIGFzIHRoZSBDU1YgZmls\
+                ZSBpcyBvcGVuZWQsIHVwZGF0ZWQsIGFuZCBjbG9zZWQgd2l0aCBlYWNoIFNhdmUuPC9wPg0KPGg0\
+                PkxpY2Vuc2U8L2g0Pg0KPHA+R1BTIFRhZ2dlcjxiciAvPiBDb3B5cmlnaHQgKEMpIDIwMTcgU3Rl\
+                cGhhbiBHYXJsYW5kPGJyIC8+c3RlcGhhbi5tYXJjLmdhcmxhbmRAZ21haWwuY29tPC9wPg0KPHA+\
+                VGhpcyBwcm9ncmFtIGlzIGZyZWUgc29mdHdhcmU6IHlvdSBjYW4gcmVkaXN0cmlidXRlIGl0IGFu\
+                ZC9vciBtb2RpZnk8YnIgLz4gaXQgdW5kZXIgdGhlIHRlcm1zIG9mIHRoZSBHTlUgR2VuZXJhbCBQ\
+                dWJsaWMgTGljZW5zZSBhcyBwdWJsaXNoZWQgYnk8YnIgLz4gdGhlIEZyZWUgU29mdHdhcmUgRm91\
+                bmRhdGlvbiwgZWl0aGVyIHZlcnNpb24gMyBvZiB0aGUgTGljZW5zZSwgb3I8YnIgLz4gKGF0IHlv\
+                dXIgb3B0aW9uKSBhbnkgbGF0ZXIgdmVyc2lvbi48L3A+DQo8cD5UaGlzIHByb2dyYW0gaXMgZGlz\
+                dHJpYnV0ZWQgaW4gdGhlIGhvcGUgdGhhdCBpdCB3aWxsIGJlIHVzZWZ1bCw8YnIgLz4gYnV0IFdJ\
+                VEhPVVQgQU5ZIFdBUlJBTlRZOyB3aXRob3V0IGV2ZW4gdGhlIGltcGxpZWQgd2FycmFudHkgb2Y8\
+                YnIgLz4gTUVSQ0hBTlRBQklMSVRZIG9yIEZJVE5FU1MgRk9SIEEgUEFSVElDVUxBUiBQVVJQT1NF\
+                LiBTZWUgdGhlPGJyIC8+IEdOVSBHZW5lcmFsIFB1YmxpYyBMaWNlbnNlIGZvciBtb3JlIGRldGFp\
+                bHMuPC9wPg0KPHA+WW91IHNob3VsZCBoYXZlIHJlY2VpdmVkIGEgY29weSBvZiB0aGUgR05VIEdl\
+                bmVyYWwgUHVibGljIExpY2Vuc2U8YnIgLz4gYWxvbmcgd2l0aCB0aGlzIHByb2dyYW0uIElmIG5v\
+                dCwgc2VlICZsdDtodHRwOi8vd3d3LmdudS5vcmcvbGljZW5zZXMvJmd0Oy48L3A+'
 
     path = os.path.abspath('temp_help.html')
     url = 'file://' + path
@@ -188,50 +211,24 @@ def help():
         webbrowser.open(url)
 
 
-    
 def quit_prog():
     try:
         os.remove(os.path.abspath('temp_help.html'))
     except FileNotFoundError:
         pass
     raise SystemExit
-    
 
 
 def clear_entries(entries):
     for entry in entries:
-        # Have to use the getter to get cleartext through
-        # Have to use tkinter object for .delete and .insert
         # This one specific item is called out as the pole number frequently increments
         if (entry[0] == 'gs_equipment_location' and output_check_var.get() == 1):
-            text = entry[1].get()
-            mod_text = str(text)
-            last_ele = mod_text.split('-')[-1:][0]
-            last_alpha = ''.join(filter(lambda x: not x.isdigit(), mod_text))
-            
-            if not any(x.isdigit() for x in last_ele):
-                # If the last element is entirely non-numeric, don't increment
-                pass
-            else:
-                # Given an input like "BRW4-N6", it is split into ['BRW4', 'N6']
-                # The last element of the list is then converted into a string via slicing
-                # A filter is run to generate the numeric and non-numeric portions with .isdigit()
-                # It's all joined with map, with the original mod_text being sliced to exclude 
-                # the last element, last_char, and last_num incremented by one
-                # Note that if the last element ends in a letter, it will be flipped, i.e.
-                # "BRW4-6N" becomes "BRW4-N7"
-                last_num = int(''.join(filter(lambda x: x.isdigit(), last_ele)))
-                last_char = ''.join(filter(lambda x: not x.isdigit(), last_ele))
-                
-                if "-" in mod_text:
-                    mod_text = '-'.join(map(str, mod_text.split('-')[:-1])) + '-' + last_char + str(last_num + 1)
-                # If the entry has no "-", e.g. BRW4, use this instead to avoid -BRW5
-                else:
-                    mod_text = last_alpha + str(last_num + 1)
-
+            incremented_pole_field = increment_pole_number(entry)
+            if not incremented_pole_field: # Catches increment_pole_number's none return if a typo is made
+                return
             entry[1].delete(0, tk.END)
-            entry[1].insert(0, mod_text)
-        
+            entry[1].insert(0, incremented_pole_field)
+
         # Don't erase input/output voltages or OHD/PAD on transformers, as they rarely change
         elif (entry[0] == 'gs_rated_input_voltage'\
            or entry[0] == 'gs_rated_output_voltage' or entry[0] == 'gs_substype_cd'):
@@ -240,20 +237,51 @@ def clear_entries(entries):
         else:
             text = entry[1]
             text.delete(0, tk.END)
-            
-    if sys.version_info.major == 2:
-        with open(csv_file_name, 'ab') as f:
-            writer = csv.writer(f)
-            # Inserts blank row between successive entries
-            writer.writerow([])
-    else:
-        with open(csv_file_name, 'a', newline='') as f:
-            writer = csv.writer(f)
-            # Inserts blank row between successive entries
-            writer.writerow([])
 
- 
- 
+
+def increment_pole_number(pole_field):
+    global pole_num_typo_deliberate
+    text = pole_field[1].get()
+    mod_text = str(text)
+    last_ele = mod_text.split('-')[-1:][0]
+    last_alpha = ''.join(filter(lambda x: not x.isdigit(), mod_text))
+
+    if not any(x.isdigit() for x in last_ele):
+        # If the last element is entirely non-numeric, don't increment
+        pass
+    # Thanks to Brian on SO - https://stackoverflow.com/a/266162/4221094
+    elif not last_ele.translate(str.maketrans('', '', string.punctuation)) == last_ele:
+        # If there are punctuation marks (assuming a typo), don't try to parse it
+        # but also inquire if it was deliberate, so they can fix the error
+        if not pole_num_typo_deliberate:
+            typo_in_pole_name = tkMsg.askyesno("Just checking", "Did you mean to include a non-alphanumeric character?")
+            if typo_in_pole_name:
+                tkMsg.showinfo("", "OK! I won't ask you again.")
+                pole_num_typo_deliberate = True
+                pass
+            else:
+                pole_num_typo_deliberate = False
+                return
+    else:
+        # Given an input like "BRW4-N6", it is split into ['BRW4', 'N6']
+        # The last element of the list is then converted into a string via slicing
+        # A filter is run to generate the numeric and non-numeric portions with .isdigit()
+        # It's all joined with map, with the original mod_text being sliced to exclude
+        # the last element, last_char, and last_num, which is incremented by one
+        last_num = int(''.join(filter(lambda x: x.isdigit(), last_ele)))
+        last_char = ''.join(filter(lambda x: not x.isdigit(), last_ele))
+
+        if "-" in mod_text:
+            if last_ele[1].isdigit() and last_ele[0].isalpha():
+                mod_text = '-'.join(map(str, mod_text.split('-')[:-1])) + '-' + last_char + str(last_num + 1)
+            else:
+                mod_text = '-'.join(map(str, mod_text.split('-')[:-1])) + '-' + str(last_num + 1) + last_char
+        # If the entry has no "-", e.g. BRW4, use this instead to avoid -BRW5
+        else:
+            mod_text = last_alpha + str(last_num + 1)
+    return mod_text
+
+
 def get_gps():
     ser.open()
     while True:
@@ -268,25 +296,67 @@ def get_gps():
     ser.close()
     return msg
 
- 
 
 def fetch(entries):
-    inputs = {}
-    for entry in entries:
-        field = entry[0]
-        text = entry[1].get()
-        if text:
-            inputs[field] = str(text)
-    wrangle_data(inputs)
+    if error_checking(entries):
+        clear_entries(entries)
+        inputs = {}
+        for entry in entries:
+            field = entry[0]
+            text = entry[1].get()
+            if text:
+                inputs[field] = str(text)
+        wrangle_data(inputs)
 
 
-    
+def error_checking(entries):
+    global line_ground_typo_deliberate
+    common_input_voltages = ([2770, 4800, 7200, 12470, 13220, 22900, 19920, 34500,
+        39840, 69000, 66400, 115000, 132800, 230000, 199200, 345000,
+        288680, 500000, 441690, 765000])
+    common_output_voltages = [120, 208, 240, 415, 277, 480]
+    try:
+        if not entries[2][1].get() == '':
+            input_voltage = int(entries[2][1].get()) # gs_rated_input_voltage
+        else:
+            input_voltage = None
+        if not entries[3][1].get() == '':
+            output_voltage = int(entries[3][1].get()) # gs_rated_output_voltage
+        else:
+            output_voltage = None
+        if not entries[5][1].get() == '':
+            rated_kva = int(entries[3][1].get()) # gs_rated_kva
+    except ValueError:
+        tkMsg.showerror("Error", "Please only input numbers into voltage fields.")
+        return
+    except TypeError:
+        pass
+
+    if  (
+        output_voltage in common_output_voltages[0::2]
+            and
+        input_voltage in common_input_voltages[1::2]
+        ):
+            if line_ground_typo_deliberate:
+                pass
+            else:
+                check_voltage_sanity = tkMsg.askyesno("Just checking", \
+                    "Did you mean to mix line-ground and line-phase voltages?")
+                if check_voltage_sanity:
+                    tkMsg.showinfo("", "OK! I won't ask you again.")
+                    line_ground_typo_deliberate = True
+                else:
+                    line_ground_typo_deliberate = False
+                    return
+    return True
+
+
 def show_gps(entries):
     msg = get_gps()
     # Loop until a valid message is returned
     while float(msg.latitude) == 0.0:
         msg = get_gps()
-        
+
     # As entries are made in makeform() with an iterator, update Lat/Long here
     for entry in entries:
         field = entry[0]
@@ -301,7 +371,6 @@ def show_gps(entries):
             pass
 
 
-
 def wrangle_data(inputs):
     # Python 2 skips inserting blank rows if it's opened as a binary file
     if sys.version_info.major == 2:
@@ -311,10 +380,12 @@ def wrangle_data(inputs):
                 writer.writerow(["Parameter", "Value"])
                 for k,v in inputs.items():
                     writer.writerow([k, v])
+                writer.writerow([]) # Inserts a blank row between entries
             else:
                 for k,v in inputs.items():
                     writer.writerow([k, v])
-                    
+                writer.writerow([])
+
     # Naturally, Python 3 has a new way of dealing with this
     else:
         with open(csv_file_name, 'a', newline='') as f:
@@ -323,12 +394,13 @@ def wrangle_data(inputs):
                 writer.writerow(["Parameter", "Value"])
                 for k,v in inputs.items():
                     writer.writerow([k, v])
+                writer.writerow([])
             else:
                 for k,v in inputs.items():
                     writer.writerow([k, v])
+                writer.writerow([])
 
 
-                    
 def secondary_capture():
     try:
         if 'python' in os.path.split(sys.executable)[1]:
@@ -338,9 +410,9 @@ def secondary_capture():
             except Exception:
                 GPS_Secondary_Tagger = __import__('GPS Secondary Tagger')
         else:
-            subprocess.Popen('GPS Secondary Tagger.exe')    
+            subprocess.Popen('GPS Secondary Tagger.exe')
     except FileNotFoundError:
         tkMsg.showerror("File Not Found", "Secondary tagger not found")
-    
-    
+
+
 get_input()

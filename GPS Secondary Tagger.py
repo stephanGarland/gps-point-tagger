@@ -40,13 +40,14 @@ ser = serial.Serial()
 ser.baudrate = 9600
 ser.timeout = 1
 
+# Feel free to add more here if you need them
 fields = 'gs_pri_pole_num', 'gs_pri_pole_coords', 'gs_secondary_1',\
          'gs_secondary_2', 'gs_secondary_3', 'gs_secondary_4',\
          'gs_secondary_5', 'gs_secondary_6', 'gs_secondary_7', 'gs_secondary_8',\
          'gs_secondary_9', 'gs_secondary_10', 'gs_secondary_11', 'gs_secondary_12',\
          'gs_secondary_13', 'gs_secondary_14', 'gs_secondary_15', 'gs_secondary_16',\
          'gs_secondary_17', 'gs_secondary_18'
-          
+
 labels = { 'gs_pri_pole_num':'Primary Pole #', 'gs_pri_pole_coords':'Primary Pole Coordinates',\
            'gs_secondary_1':'Secondary #1', 'gs_secondary_2':'Secondary #2',\
            'gs_secondary_3':'Secondary #3', 'gs_secondary_4':'Secondary #4',\
@@ -58,20 +59,20 @@ labels = { 'gs_pri_pole_num':'Primary Pole #', 'gs_pri_pole_coords':'Primary Pol
            'gs_secondary_15':'Secondary #15', 'gs_secondary_16':'Secondary #16',\
            'gs_secondary_17':'Secondary #17', 'gs_secondary_18':'Secondary #18'
          }
-           
-# Iterate over all available ports and find the GPS          
+
+# Iterate over all available ports and find the GPS
 ser_ports = list(test_ser.comports())
 
 for p in ser_ports:
     if 'NMEA' in p.description:
         ser.port = p.device
         # Used for debugging
-        # print("GPS found at {0}\n{1}".format(p.device, p.description))  
+        # print("GPS found at {0}\n{1}".format(p.device, p.description))
 if not ser.port:
     no_gps_question = tkMsg.askyesno("Error", "No GPS Device found - do you wish to continue?")
-    if no_gps_question == True:
+    if no_gps_question:
         pass
-    elif no_gps_question == False:
+    else:
         # ser.open() hasn't been called yet, nothing to flush
         raise SystemExit
 
@@ -94,8 +95,8 @@ def makeform(root, fields):
         ent.pack(side=tk.RIGHT, expand=tk.YES, fill=tk.X)
         entries.append((field, ent))
     return entries
-    
-    
+
+
 def get_input():
     global counter
     root.deiconify()
@@ -119,45 +120,61 @@ def get_input():
     b7 = tk.Button(root, text="Quit", command=quit_prog)
     b7.pack(side=tk.LEFT, padx=5, pady=5)
     root.mainloop()
-    
-    
-    
+
+
 # This is a HTML file encoded into base64, so I can launch a HTML webpage for help
 # The temporary file is stored temporarily in the path where the program is executed,
 # and removed once the program is exited
-# You are welcome to visit https://www.base64decode.org and copy/paste this block in 
+# You are welcome to visit https://www.base64decode.org and copy/paste this block in
 # if you are (rightfully) suspicious of obfuscated code
 def help():
-    b64html = b'PCFET0NUWVBFIGh0bWw+DQo8aHRtbCBsYW5nID0gImVuIj4NCjxoZWFkPg0KICA8dGl0bGU+R1BTIFNlY29uZGFyeSBUYWdnZXIgSGVscDwvdGl\
-                0bGU+DQo8L2hlYWQ+DQo8Ym9keT4NCiAgICA8aDE+R1BTIFNlY29uZGFyeSBUYWdnZXIgSGVscDwvaDE+DQogICAgPGg0PlJlcXVpcmVtZW50cz\
-                o8L2g0Pg0KICAgIDx1bD4NCiAgICA8bGk+R1BTIGRldmljZSBjYXBhYmxlIG9mIG91dHB1dHRpbmcgTk1FQSBtZXNzYWdlcyAtIHRoZSBwcm9nc\
-                mFtIHdpbGwgYWxlcnQgeW91IGlmIG5vIHN1aXRhYmxlIGRldmljZSBpcyBmb3VuZCwgYW5kIGFsc28gY29uZmlndXJlcyBpdHMgb3duIHBvcnQg\
-                c2VsZWN0aW9uLjwvbGk+DQogICAgPC91bD4NCiAgICA8cD5UbyB1c2UgdGhlIGFwcCwgeW91IGF0IGEgbWluaW11bSBtdXN0IGluY2x1ZGUgYSB\
-                QcmltYXJ5IFBvbGUgIywgYXMgdGhlIGFwcCBhdXRvLW5hbWVzIHRoZSByZXN1bHRhbnQgS01MIGJhc2VkIG9uIHRoYXQgbmFtZS48L3A+DQogIC\
-                AgPHA+VG8gZ2V0IEdQUyBjb29yZGluYXRlcywgdXNlIHRoZSBHZXQgTGF0XExvbmcgYnV0dG9uIC0gdGhlcmUgbWF5IGJlIGEgZGVsYXksIGFzI\
-                HRoZSBwcm9ncmFtIGxvb3BzIHJlYWRpbmcgdGhlIG1lc3NhZ2VzIHVudGlsIGEgdmFsaWQgKGkuZS4gbm90IDAuMCwwLjAgTGF0L0xvbmcpIGlz\
-                IHJlY2VpdmVkLjwvcD4NCiAgICA8cD5XaGVuIHlvdSBoYXZlIGNvbXBsZXRlZCBlbnRlcmluZyBkYXRhIGZvciB0aGUgcG9sZS90cmFuc2Zvcm1\
-                lciwgc2VsZWN0IFNhdmUsIHRoZW4gQ2xlYXIgQWxsLiBUaGlzIHdpbGwgd3JpdGUgdGhlIGRhdGEgdG8gYSBLTUwgZmlsZSwgYW5kIHJlc2V0IH\
-                RoZSBjb3VudGVyIChzZWUgYmVsb3cpLjwvcD4NCiAgICA8cD5XaGVuIHlvdSBmaXJzdCB1c2UgR2V0IExvbmcvTGF0LCB0aGUgcHJvZ3JhbSB3a\
-                WxsIHB1dCB5b3VyIGNvb3JkaW5hdGVzIGludG8gdGhlIFByaW1hcnkgUG9sZSBDb29yZGluYXRlcyBmaWVsZC4gSXQgdGhlbiBpbmNyZW1lbnRz\
-                IGFuIGludGVybmFsIGNvdW50ZXIgYnkgb25lLCBzbyB0aGF0IHRoZSBuZXh0IHRpbWUgeW91IHByZXNzIEdldCBMb25nL0xhdCwgdGhlIFNlY29\
-                uZGFyeSAjMSBmaWVsZCBpcyBmaWxsZWQsIGFuZCBzbyBvbi4gSWYgeW91IG5lZWQgdG8gbWFudWFsbHkgc2tpcCBhaGVhZCBvciBiZWhpbmQsIH\
-                VzZSB0aGUgTmV4dC9QcmV2aW91cyBidXR0b25zLjwvcD4NCiAgICA8aDQ+S25vd24gSXNzdWVzL1dvcmthcm91bmRzOjwvaDQ+DQogICAgPHA+T\
-                2NjYXNpb25hbGx5LCB3aGVuIHJldHJpZXZpbmcgR1BTIGNvb3JkaW5hdGVzLCB0aGUgQ09NIHBvcnQgd2lsbCBiZWNvbWUgbG9ja2VkLCBhbmQg\
-                dGhlIHByb2dyYW0gd2lsbCBmcmVlemUsIG5lY2Vzc2l0YXRpbmcgdGhlIGNvbXB1dGVyIHRvIGJlIHJlYm9vdGVkLiBJIGhhdmUgbW9kaWZpZWQ\
-                gdGhlIHByb2dyYW0gdG8gb3BlbiBhbmQgY2xvc2UgdGhlIENPTSBwb3J0IGJldHdlZW4gZWFjaCBzZXQgb2YgY29vcmRpbmF0ZXMsIHdoaWNoIE\
-                kgYmVsaWV2ZSBoYXMgZml4ZWQgdGhlIGlzc3VlLCBidXQgaWYgaXQgb2NjdXJzLCByZWJvb3QuPC9wPg0KICAgIDxoND5MaWNlbnNlPC9oND4NC\
-                iAgICA8cD5HUFMgU2Vjb25kYXJ5IFRhZ2dlcjxiciAvPiBDb3B5cmlnaHQgKEMpIDIwMTcgU3RlcGhhbiBHYXJsYW5kPGJyIC8+c3RlcGhhbi5t\
-                YXJjLmdhcmxhbmRAZ21haWwuY29tPC9wPg0KICAgIDxwPlRoaXMgcHJvZ3JhbSBpcyBmcmVlIHNvZnR3YXJlOiB5b3UgY2FuIHJlZGlzdHJpYnV\
-                0ZSBpdCBhbmQvb3IgbW9kaWZ5PGJyIC8+IGl0IHVuZGVyIHRoZSB0ZXJtcyBvZiB0aGUgR05VIEdlbmVyYWwgUHVibGljIExpY2Vuc2UgYXMgcH\
-                VibGlzaGVkIGJ5PGJyIC8+IHRoZSBGcmVlIFNvZnR3YXJlIEZvdW5kYXRpb24sIGVpdGhlciB2ZXJzaW9uIDMgb2YgdGhlIExpY2Vuc2UsIG9yP\
-                GJyIC8+IChhdCB5b3VyIG9wdGlvbikgYW55IGxhdGVyIHZlcnNpb24uPC9wPg0KICAgIDxwPlRoaXMgcHJvZ3JhbSBpcyBkaXN0cmlidXRlZCBp\
-                biB0aGUgaG9wZSB0aGF0IGl0IHdpbGwgYmUgdXNlZnVsLDxiciAvPiBidXQgV0lUSE9VVCBBTlkgV0FSUkFOVFk7IHdpdGhvdXQgZXZlbiB0aGU\
-                gaW1wbGllZCB3YXJyYW50eSBvZjxiciAvPiBNRVJDSEFOVEFCSUxJVFkgb3IgRklUTkVTUyBGT1IgQSBQQVJUSUNVTEFSIFBVUlBPU0UuIFNlZS\
-                B0aGU8YnIgLz4gR05VIEdlbmVyYWwgUHVibGljIExpY2Vuc2UgZm9yIG1vcmUgZGV0YWlscy48L3A+DQogICAgPHA+WW91IHNob3VsZCBoYXZlI\
-                HJlY2VpdmVkIGEgY29weSBvZiB0aGUgR05VIEdlbmVyYWwgUHVibGljIExpY2Vuc2U8YnIgLz4gYWxvbmcgd2l0aCB0aGlzIHByb2dyYW0uIElm\
-                IG5vdCwgc2VlICZsdDtodHRwOi8vd3d3LmdudS5vcmcvbGljZW5zZXMvJmd0Oy48L3A+DQo8L2JvZHk+DQo8L2h0bWw+'
-                
+    b64html = b'PCFET0NUWVBFIGh0bWw+DQo8aHRtbCBsYW5nID0gImVuIj4NCjxoZWFkPg0KICA8dGl0bGU+R1BT\
+                IFNlY29uZGFyeSBUYWdnZXIgSGVscDwvdGl0bGU+DQo8L2hlYWQ+DQo8Ym9keT4NCiAgICA8aDE+\
+                R1BTIFNlY29uZGFyeSBUYWdnZXIgSGVscDwvaDE+DQogICAgPGg0PlJlcXVpcmVtZW50czo8L2g0\
+                Pg0KICAgIDx1bD4NCiAgICA8bGk+R1BTIGRldmljZSBjYXBhYmxlIG9mIG91dHB1dHRpbmcgTk1F\
+                QSBtZXNzYWdlcyAtIHRoZSBwcm9ncmFtIHdpbGwgYWxlcnQgeW91IGlmIG5vIHN1aXRhYmxlIGRl\
+                dmljZSBpcyBmb3VuZCwgYW5kIGFsc28gY29uZmlndXJlcyBpdHMgb3duIHBvcnQgc2VsZWN0aW9u\
+                LiBOb3QgdGVzdGVkIHdpdGggVVNCIEdQUyBkZXZpY2VzLCBidXQgYW55dGhpbmcgdGhhdCB1dGls\
+                aXplcyBhIENPTSBwb3J0ICh2aXJ0dWFsIG9yIG90aGVyd2lzZSkgc2hvdWxkIHdvcmsuIFdpbmRv\
+                d3MgMTAgbWF5IHVzZSBXaW5kb3dzIExvY2F0aW9uIFNlcnZpY2VzIGluc3RlYWQgb2YgYSBDT00g\
+                cG9ydCwgd2hpY2ggd2lsbCBub3Qgd29yay48L2xpPg0KICAgIDwvdWw+DQogICAgPHA+VG8gdXNl\
+                IHRoZSBhcHAsIHlvdSBhdCBhIG1pbmltdW0gbXVzdCBpbmNsdWRlIGEgUHJpbWFyeSBQb2xlICMs\
+                IGFzIHRoZSBhcHAgYXV0by1uYW1lcyB0aGUgcmVzdWx0YW50IEtNTCBiYXNlZCBvbiB0aGF0IG5h\
+                bWUuPC9wPg0KICAgIDxwPlRvIGdldCBHUFMgY29vcmRpbmF0ZXMsIHVzZSB0aGUgR2V0IExhdFxM\
+                b25nIGJ1dHRvbiAtIHRoZXJlIG1heSBiZSBhIGRlbGF5LCBhcyB0aGUgcHJvZ3JhbSBsb29wcyBy\
+                ZWFkaW5nIHRoZSBtZXNzYWdlcyB1bnRpbCBhIHZhbGlkIChpLmUuIG5vdCAwLjAsMC4wIExhdC9M\
+                b25nKSBpcyByZWNlaXZlZC48L3A+DQogICAgPHA+V2hlbiB5b3UgaGF2ZSBjb21wbGV0ZWQgZW50\
+                ZXJpbmcgZGF0YSBmb3IgdGhlIHBvbGUvdHJhbnNmb3JtZXIsIHNlbGVjdCBTYXZlLCB0aGVuIENs\
+                ZWFyIEFsbC4gVGhpcyB3aWxsIHdyaXRlIHRoZSBkYXRhIHRvIGEgS01MIGZpbGUsIGFuZCByZXNl\
+                dCB0aGUgY291bnRlciAoc2VlIGJlbG93KS48L3A+DQogICAgPHA+V2hlbiB5b3UgZmlyc3QgdXNl\
+                IEdldCBMb25nL0xhdCwgdGhlIHByb2dyYW0gd2lsbCBwdXQgeW91ciBjb29yZGluYXRlcyBpbnRv\
+                IHRoZSBQcmltYXJ5IFBvbGUgQ29vcmRpbmF0ZXMgZmllbGQuIEl0IHRoZW4gaW5jcmVtZW50cyBh\
+                biBpbnRlcm5hbCBjb3VudGVyIGJ5IG9uZSwgc28gdGhhdCB0aGUgbmV4dCB0aW1lIHlvdSBwcmVz\
+                cyBHZXQgTG9uZy9MYXQsIHRoZSBTZWNvbmRhcnkgIzEgZmllbGQgaXMgZmlsbGVkLCBhbmQgc28g\
+                b24uIElmIHlvdSBuZWVkIHRvIG1hbnVhbGx5IHNraXAgYWhlYWQgb3IgYmVoaW5kLCB1c2UgdGhl\
+                IE5leHQvUHJldmlvdXMgYnV0dG9ucy48L3A+DQogICAgPGg0Pktub3duIElzc3Vlcy9Xb3JrYXJv\
+                dW5kczo8L2g0Pg0KICAgIDxwPk9jY2FzaW9uYWxseSwgd2hlbiByZXRyaWV2aW5nIEdQUyBjb29y\
+                ZGluYXRlcywgdGhlIENPTSBwb3J0IHdpbGwgYmVjb21lIGxvY2tlZCwgYW5kIHRoZSBwcm9ncmFt\
+                IHdpbGwgZnJlZXplLCBuZWNlc3NpdGF0aW5nIHRoZSBjb21wdXRlciB0byBiZSByZWJvb3RlZC4g\
+                SSBoYXZlIG1vZGlmaWVkIHRoZSBwcm9ncmFtIHRvIG9wZW4gYW5kIGNsb3NlIHRoZSBDT00gcG9y\
+                dCBiZXR3ZWVuIGVhY2ggc2V0IG9mIGNvb3JkaW5hdGVzLCB3aGljaCBJIGJlbGlldmUgaGFzIGZp\
+                eGVkIHRoZSBpc3N1ZSwgYnV0IGlmIGl0IG9jY3VycywgcmVib290LjwvcD4NCiAgICA8aDQ+TGlj\
+                ZW5zZTwvaDQ+DQogICAgPHA+R1BTIFNlY29uZGFyeSBUYWdnZXI8YnIgLz4gQ29weXJpZ2h0IChD\
+                KSAyMDE3IFN0ZXBoYW4gR2FybGFuZDxiciAvPnN0ZXBoYW4ubWFyYy5nYXJsYW5kQGdtYWlsLmNv\
+                bTwvcD4NCiAgICA8cD5UaGlzIHByb2dyYW0gaXMgZnJlZSBzb2Z0d2FyZTogeW91IGNhbiByZWRp\
+                c3RyaWJ1dGUgaXQgYW5kL29yIG1vZGlmeTxiciAvPiBpdCB1bmRlciB0aGUgdGVybXMgb2YgdGhl\
+                IEdOVSBHZW5lcmFsIFB1YmxpYyBMaWNlbnNlIGFzIHB1Ymxpc2hlZCBieTxiciAvPiB0aGUgRnJl\
+                ZSBTb2Z0d2FyZSBGb3VuZGF0aW9uLCBlaXRoZXIgdmVyc2lvbiAzIG9mIHRoZSBMaWNlbnNlLCBv\
+                cjxiciAvPiAoYXQgeW91ciBvcHRpb24pIGFueSBsYXRlciB2ZXJzaW9uLjwvcD4NCiAgICA8cD5U\
+                aGlzIHByb2dyYW0gaXMgZGlzdHJpYnV0ZWQgaW4gdGhlIGhvcGUgdGhhdCBpdCB3aWxsIGJlIHVz\
+                ZWZ1bCw8YnIgLz4gYnV0IFdJVEhPVVQgQU5ZIFdBUlJBTlRZOyB3aXRob3V0IGV2ZW4gdGhlIGlt\
+                cGxpZWQgd2FycmFudHkgb2Y8YnIgLz4gTUVSQ0hBTlRBQklMSVRZIG9yIEZJVE5FU1MgRk9SIEEg\
+                UEFSVElDVUxBUiBQVVJQT1NFLiBTZWUgdGhlPGJyIC8+IEdOVSBHZW5lcmFsIFB1YmxpYyBMaWNl\
+                bnNlIGZvciBtb3JlIGRldGFpbHMuPC9wPg0KICAgIDxwPllvdSBzaG91bGQgaGF2ZSByZWNlaXZl\
+                ZCBhIGNvcHkgb2YgdGhlIEdOVSBHZW5lcmFsIFB1YmxpYyBMaWNlbnNlPGJyIC8+IGFsb25nIHdp\
+                dGggdGhpcyBwcm9ncmFtLiBJZiBub3QsIHNlZSAmbHQ7aHR0cDovL3d3dy5nbnUub3JnL2xpY2Vu\
+                c2VzLyZndDsuPC9wPg0KPC9ib2R5Pg0KPC9odG1sPg=='
+
     path = os.path.abspath('temp_help.html')
     url = 'file://' + path
     html = base64.b64decode(b64html).decode('utf-8', 'ignore')
@@ -166,7 +183,6 @@ def help():
         webbrowser.open(url)
 
 
-        
 def quit_prog():
     try:
         os.remove(os.path.abspath('temp_help.html'))
@@ -179,7 +195,6 @@ def quit_prog():
         raise SystemExit
     else:
         root.withdraw()
-    
 
 
 def clear_entries(entries):
@@ -191,20 +206,17 @@ def clear_entries(entries):
     global counter
     counter = 1
 
-        
 
 def next_entry():
     global counter
     counter += 1
 
-    
-    
+
 def prev_entry():
     global counter
     counter -= 1
 
 
-    
 def get_gps():
     ser.open()
     while True:
@@ -219,7 +231,6 @@ def get_gps():
     ser.close()
     return msg
 
- 
 
 def fetch(entries):
     kml = simplekml.Kml()
@@ -227,7 +238,7 @@ def fetch(entries):
     #span_coords = []
     for entry in entries:
         field = entry[0]
-        text = entry[1].get()   
+        text = entry[1].get()
         if field == 'gs_pri_pole_num':
             pole_num = text
         elif field == 'gs_pri_pole_coords':
@@ -252,8 +263,6 @@ def fetch(entries):
     kml.save(kml_file_name)
 
 
-
-    
 def show_gps(entries):
     msg = get_gps()
     # Loop until a valid message is returned
@@ -268,7 +277,5 @@ def show_gps(entries):
     # Once a valid message is returned, move to the next
     if not text.get() == '0.0,0.0':
         next_entry()
-
-        
 
 get_input()
