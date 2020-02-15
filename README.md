@@ -5,7 +5,7 @@ Frustrated by the lack of commercial or FOSS offerings, I made a simple tool wit
 Additionally, there is a Secondary program that maps poles to a KML file.
 
 
-##Dependencies:
+## Dependencies:
 *************
 
 * `Pynmea2 <https://pypi.python.org/pypi/pynmea2>`
@@ -13,7 +13,7 @@ Additionally, there is a Secondary program that maps poles to a KML file.
 * `Simplekml (for Secondary Tagger) <https://pypi.python.org/pypi/simplekml>`
 
 
-##How to use GPS Tagger:
+## How to use GPS Tagger:
 ************************
 1. Upon launch, choose where to save the resultant CSV file.
 2. Input info into text boxes. Use the Get Long/Lat button to get those inputted. Note, you may have to press this a few times to get actual readings.
@@ -21,7 +21,7 @@ Additionally, there is a Secondary program that maps poles to a KML file.
 4. If you have more entries, press Clear to reset all text boxes, and insert a blank row in the CSV.
 5. When done, press Quit.
 
-##How to use Secondary GPS Tagger:
+## How to use Secondary GPS Tagger:
 ************************
 1. Input a pole number/name into the Primary Pole # field.
 2. Press Get Lat/Long to get coordinates for the primary pole.
@@ -30,13 +30,10 @@ Additionally, there is a Secondary program that maps poles to a KML file.
 5. Press Save to generate a KML, saved in the script's location.
 6. Press Clear All to wipe all fields, and reset the counter.
 
-##Changelog:
+## Changelog:
 **********
 
 * v1.0 - Initial release.
 * v1.1 - Re-arranged items to capture to be a more logical flow.
 * v1.2 - Created Secondary program that maps poles with simplekml.
 * v1.3 - Integrated launching of Secondary program into Primary
-
-
-
