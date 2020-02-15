@@ -1,3 +1,5 @@
+# GPS Point Tagger
+
 Frustrated by the lack of commercial or FOSS offerings, I made a simple tool with Python. This lets you get GPS coordinates from any NMEA-compatible device, and place them, along with whatever other attributes you'd like (currently set up for utility poles, transformers, and electric meters, but it would be trivial to change the dictionaries) into a CSV.
 
 Additionally, there is a Secondary program that maps poles to a KML file.
@@ -6,9 +8,9 @@ Additionally, there is a Secondary program that maps poles to a KML file.
 Dependencies:
 *************
 
-* `Pynmea2 <https://pypi.python.org/pypi/pynmea2>`_
-* `Pyserial <https://pypi.python.org/pypi/pyserial>`_
-* `Simplekml (for Secondary Tagger) <https://pypi.python.org/pypi/simplekml>`_
+* `Pynmea2 <https://pypi.python.org/pypi/pynmea2>`
+* `Pyserial <https://pypi.python.org/pypi/pyserial>`
+* `Simplekml (for Secondary Tagger) <https://pypi.python.org/pypi/simplekml>`
 
 
 How to use GPS Tagger:
